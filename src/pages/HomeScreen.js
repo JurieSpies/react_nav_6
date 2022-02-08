@@ -1,17 +1,52 @@
 import {useNavigation} from '@react-navigation/native';
+import {useQuery} from 'graphql-hooks';
 import * as React from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+const PRODUCTS = `query{
+  products{
+    name
+    status
+    description
+    imageUrl
+  }
+}`;
 
 const HomeScreen = () => {
   const navigation = useNavigation();
+  const {data, loading, error} = useQuery(PRODUCTS);
+
   return (
     <View style={styles.mainContainer}>
-      <Text>Home Screen</Text>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Dashboard')}>
-        <Text>Go to Dashboard</Text>
-      </TouchableOpacity>
+      {error && (
+        <>
+          <Text style={styles.errorText}>API Error. Please reload</Text>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.reset({
+                index: 0,
+                routes: [{name: 'Home'}],
+              })
+            }>
+            <Text>Refresh</Text>
+          </TouchableOpacity>
+        </>
+      )}
+      {loading && <ActivityIndicator color="green" size="large" />}
+      {data &&
+        data.products.map(product => (
+          <>
+            <Text>{product.name}</Text>
+            <Image style={styles.imageStyle} source={{uri: product.imageUrl}} />
+          </>
+        ))}
     </View>
   );
 };
@@ -21,13 +56,15 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'grey',
+    backgroundColor: '#fff',
   },
-  button: {
-    backgroundColor: 'white',
-    padding: 10,
-    marginTop: 50,
-    borderRadius: 10,
+  errorText: {
+    color: '#f10',
+    fontSize: 20,
+  },
+  imageStyle: {
+    height: 100,
+    width: 100,
   },
 });
 
